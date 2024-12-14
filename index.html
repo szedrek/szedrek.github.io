@@ -130,39 +130,48 @@
 
         let currentImageIndex = 0;
 
-        // Function to load a random image from the list
+        // Function to load the next image from the list
         function loadNextImage() {
+            // Get the current background div and its parent
             const background = document.getElementById('background');
-            const randomImage = images[currentImageIndex];
+
+            // Remove old background
+            if (background) {
+                background.classList.remove('active');
+            }
+
+            // Increment the image index and loop back if it reaches the end
+            currentImageIndex = (currentImageIndex + 1) % images.length;
 
             // Create a new background element
             const newBackground = document.createElement('div');
             newBackground.className = 'background';
-            newBackground.style.backgroundImage = `url(${randomImage})`;
+            newBackground.style.backgroundImage = `url(${images[currentImageIndex]})`;
 
-            // Add the new background to the DOM
-            document.body.insertBefore(newBackground, document.body.firstChild);
+            // Append the new background to the body
+            document.body.appendChild(newBackground);
 
             // Trigger reflow (forcing a new layout pass)
             newBackground.offsetHeight;
 
             // Add the 'active' class to fade in and zoom
-            newBackground.classList.add('active');
-
-            // Remove the old background after transition
             setTimeout(() => {
-                background.remove();
-            }, 2000);  // Delay for 2 seconds to ensure the old image has finished transitioning
+                newBackground.classList.add('active');
+            }, 50);  // Small delay to ensure it's ready for animation
 
-            // Update the image index for the next round
-            currentImageIndex = (currentImageIndex + 1) % images.length;
+            // Set timeout to remove the old background after the transition ends
+            setTimeout(() => {
+                if (background) {
+                    background.remove();
+                }
+            }, 2000);  // Match the transition time
         }
 
-        // Initialize the slideshow with random images and smooth transitions
-        loadNextImage();  // Load the first image immediately
-        setInterval(loadNextImage, 7000);  // Change image every 7 seconds
+        // Start the image rotation immediately and every 7 seconds
+        loadNextImage(); // Initial image load
+        setInterval(loadNextImage, 7000); // Change image every 7 seconds
 
-        // Add click handler for begin button
+        // Add click handler for the begin button
         document.getElementById('beginButton').addEventListener('click', () => {
             window.location.href = 'https://szedrek.github.io/2024';
         });
