@@ -1,1 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Family Journey 2023</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #startButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #startButton:hover {
+            background-color: #45a049;
+        }
+        #globalMap {
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: #333;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+            opacity: 0;
+            transition: opacity 1s, transform 1s;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: white;
+            border: 4px solid #FF9F55;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .left {
+            left: 0;
+        }
+        .right {
+            left: 50%;
+        }
+        .left::before {
+            content: " ";
+            height: 0;
+            position: absolute;
+            top: 22px;
+            width: 0;
+            z-index: 1;
+            right: 30px;
+            border: medium solid white;
+            border-width: 10px 0 10px 10px;
+            border-color: transparent transparent transparent white;
+        }
+        .right::before {
+            content: " ";
+            height: 0;
+            position: absolute;
+            top: 22px;
+            width: 0;
+            z-index: 1;
+            left: 30px;
+            border: medium solid white;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent white transparent transparent;
+        }
+        .right::after {
+            left: -16px;
+        }
+        .content {
+            padding: 20px 30px;
+            background-color: white;
+            position: relative;
+            border-radius: 6px;
+        }
+        .map {
+            height: 200px;
+            margin-top: 10px;
+        }
+        .photo {
+            max-width: 100%;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        .photo:hover {
+            transform: scale(1.05);
+        }
+        #lightbox {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        #lightbox-img {
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            margin-top: 2%;
+        }
+        .summary {
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 40px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .stat {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #travelChart {
+            max-width: 400px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Our Family Journey 2023</h1>
+        <button id="startButton">Begin Journey</button>
+        <div id="globalMap"></div>
+        <div class="timeline" id="timeline">
+            <!-- Timeline items will be dynamically added here -->
+        </div>
+        <div class="summary" id="summary">
+            <h2>Year in Review</h2>
+            <div class="stat">Total Days Abroad: <span id="daysAbroad">0</span></div>
+            <div class="stat">Total Distance Traveled: <span id="distanceTraveled">0</span> km</div>
+            <div class="stat">Countries Visited: <span id="countriesVisited">0</span></div>
+            <canvas id="travelChart"></canvas>
+        </div>
+    </div>
+    <div id="lightbox">
+        <img id="lightbox-img" src="" alt="Lightbox Image">
+    </div>
 
+    <script>
+        const journeyData = [
+            {
+                date: "January 15, 2023",
+                location: "Paris, France",
+                description: "Started our journey in the City of Light!",
+                coordinates: {lat: 48.8566, lng: 2.3522},
+                photo: "https://example.com/paris.jpg"
+            },
+            {
+                date: "March 22, 2023",
+                location: "Rome, Italy",
+                description: "Explored ancient ruins and enjoyed delicious pasta.",
+                coordinates: {lat: 41.9028, lng: 12.4964},
+                photo: "https://example.com/rome.jpg"
+            },
+            {
+                date: "June 10, 2023",
+                location: "Tokyo, Japan",
+                description: "Immersed ourselves in the unique blend of tradition and technology.",
+                coordinates: {lat: 35.6762, lng: 139.6503},
+                photo: "https://example.com/tokyo.jpg"
+            },
+            {
+                date: "September 5, 2023",
+                location: "New York City, USA",
+                description: "Experienced the energy of the Big Apple.",
+                coordinates: {lat: 40.7128, lng: -74.0060},
+                photo: "https://example.com/nyc.jpg"
+            },
+            {
+                date: "December 20, 2023",
+                location: "Sydney, Australia",
+                description: "Ended our year-long journey with a sunny Christmas!",
+                coordinates: {lat: -33.8688, lng: 151.2093},
+                photo: "https://example.com/sydney.jpg"
+            }
+        ];
+
+        let globalMap, globalMapMarkers = [], animationPath, planeMarker;
+        let currentEventIndex = -1;
+
+        function createTimelineItem(journey, index) {
+            const item = document.createElement('div');
+            item.className = `timeline-item ${index % 2 === 0 ? 'left' : 'right'}`;
+            item.id = `event-${index}`;
+    
+            const content = document.createElement('div');
+            content.className = 'content';
+    
+            content.innerHTML = `
+                <h2>${journey.date}</h2>
+                <h3>${journey.location}</h3>
+                <p>${journey.description}</p>
+                <div id="map-${index}" class="map"></div>
+                <img src="${journey.photo}" alt="${journey.location}" class="photo">
+            `;
+    
+            item.appendChild(content);
+            return item;
+        }
+
+        function initMap(mapId, coordinates) {
+            const map = new google.maps.Map(document.getElementById(mapId), {
+                zoom: 10,
+                center: coordinates
+            });
+            new google.maps.Marker({
+                position: coordinates,
+                map: map
+            });
+        }
+
+        function initGlobalMap() {
+            globalMap = new google.maps.Map(document.getElementById('globalMap'), {
+                zoom: 2,
+                center: {lat: 20, lng: 0}
+            });
+
+            const bounds = new google.maps.LatLngBounds();
+            journeyData.forEach((journey, index) => {
+                const marker = new google.maps.Marker({
+                    position: journey.coordinates,
+                    map: globalMap,
+                    title: journey.location
+                });
+                bounds.extend(marker.position);
+                globalMapMarkers.push(marker);
+
+                marker.addListener('click', () => showEventDetails(index));
+            });
+            globalMap.fitBounds(bounds);
+        }
+
+        function showEventDetails(index) {
+            const timelineItem = document.getElementById(`event-${index}`);
+            const offsetTop = timelineItem.offsetTop;
+            window.scrollTo({ top: offsetTop - 50, behavior: 'smooth' });
+
+            if (index === currentEventIndex) return;
+            currentEventIndex = index;
+
+            if (planeMarker) planeMarker.setMap(null); // Remove previous plane marker if exists
+            const journey = journeyData[index];
+            animatePlane(journey.coordinates);
+        }
+
+        function animatePlane(destination) {
+            const flightPath = new google.maps.Polyline({
+                path: animationPath,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            });
+            flightPath.setMap(globalMap);
+
+            const planeIcon = {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 6,
+                strokeColor: '#000000'
+            };
+            planeMarker = new google.maps.Marker({
+                position: animationPath[0],
+                map: globalMap,
+                icon: planeIcon,
+                animation: google.maps.Animation.DROP
+            });
+
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < animationPath.length - 1) {
+                    planeMarker.setPosition(animationPath[index]);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+
+        function startJourney() {
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('timeline').innerHTML = '';
+
+            journeyData.forEach((journey, index) => {
+                const timelineItem = createTimelineItem(journey, index);
+                document.getElementById('timeline').appendChild(timelineItem);
+                initMap(`map-${index}`, journey.coordinates);
+            });
+
+            document.getElementById('summary').style.opacity = 1;
+            initGlobalMap();
+            showEventDetails(0); // Start the journey from the first event
+        }
+
+        // Initialize the global map with markers
+        document.getElementById('startButton').addEventListener('click', startJourney);
+    </script>
+</body>
+</html>
