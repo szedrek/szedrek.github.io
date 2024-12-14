@@ -25,7 +25,7 @@
             background-size: cover;
             background-position: center;
             opacity: 0;
-            transition: opacity 2s ease-in-out, transform 7s ease-in-out;
+            transition: opacity 2s ease-in-out, transform 2s ease-in-out;
             transform: scale(1.1);
         }
         
@@ -33,7 +33,7 @@
             opacity: 1;
             transform: scale(1);
         }
-        
+
         .background::after {
             content: '';
             position: absolute;
@@ -128,10 +128,12 @@
             'torta.jpg'
         ];
 
+        let currentImageIndex = 0;
+
         // Function to load a random image from the list
-        function loadRandomImage() {
+        function loadNextImage() {
             const background = document.getElementById('background');
-            const randomImage = images[Math.floor(Math.random() * images.length)];
+            const randomImage = images[currentImageIndex];
 
             // Create a new background element
             const newBackground = document.createElement('div');
@@ -149,15 +151,16 @@
 
             // Remove the old background after transition
             setTimeout(() => {
-                if (background.parentNode) {
-                    background.parentNode.removeChild(background);
-                }
+                background.remove();
             }, 2000);  // Delay for 2 seconds to ensure the old image has finished transitioning
+
+            // Update the image index for the next round
+            currentImageIndex = (currentImageIndex + 1) % images.length;
         }
 
         // Initialize the slideshow with random images and smooth transitions
-        setInterval(loadRandomImage, 7000);  // Change image every 7 seconds
-        loadRandomImage();  // Load the first image immediately
+        loadNextImage();  // Load the first image immediately
+        setInterval(loadNextImage, 7000);  // Change image every 7 seconds
 
         // Add click handler for begin button
         document.getElementById('beginButton').addEventListener('click', () => {
