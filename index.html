@@ -136,25 +136,30 @@
     <script>
         // List of image files in the images folder
         const imageFiles = [
-            'image1.jpg',
-            'image2.jpg',
-            'image3.jpg',
-            'image4.jpg',
-            'image5.jpg',
-            // Add more image filenames as needed
+            '/placeholder.svg?height=1080&width=1920',
+            '/placeholder.svg?height=1080&width=1920',
+            '/placeholder.svg?height=1080&width=1920',
+            '/placeholder.svg?height=1080&width=1920',
+            '/placeholder.svg?height=1080&width=1920'
         ];
 
-        // Function to get all images from the images folder
+        // Function to get all images
         function loadImages() {
-            return imageFiles.map(file => `images/${file}`);
+            return imageFiles;
         }
 
         // Function to preload images
         function preloadImage(src) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = reject;
+                img.onload = () => {
+                    console.log(`Image loaded successfully: ${src}`);
+                    resolve(img);
+                };
+                img.onerror = (error) => {
+                    console.error(`Error loading image ${src}:`, error);
+                    reject(error);
+                };
                 img.src = src;
             });
         }
@@ -172,56 +177,67 @@
         async function initSlideshow() {
             const background = document.getElementById('background');
             let images = loadImages();
+            console.log('Loaded images:', images);
+
             if (images.length === 0) {
-                console.error('No images found in the images folder');
+                console.error('No images found');
                 return;
             }
-            let shuffledImages = shuffleArray([...images]);
 
-            // Preload first image
-            const firstImg = await preloadImage(shuffledImages[0]);
-            firstImg.classList.add('active');
-            background.appendChild(firstImg);
+            let shuffledImages = shuffleArray([...images]);
+            console.log('Shuffled images:', shuffledImages);
 
             let currentIndex = 0;
 
             // Function to show next image
             async function showNextImage() {
-                currentIndex = (currentIndex + 1) % shuffledImages.length;
-                const nextImg = await preloadImage(shuffledImages[currentIndex]);
-                
-                // Add new image
-                nextImg.style.opacity = '0';
-                background.appendChild(nextImg);
-                
-                // Trigger reflow
-                nextImg.offsetHeight;
-                
-                // Add active class to new image
-                nextImg.classList.add('active');
-                
-                // Remove old image after transition
-                if (background.children.length > 1) {
-                    const oldImg = background.children[0];
-                    oldImg.classList.add('fade-out');
+                try {
+                    console.log(`Loading image: ${shuffledImages[currentIndex]}`);
+                    const nextImg = await preloadImage(shuffledImages[currentIndex]);
                     
-                    setTimeout(() => {
-                        background.removeChild(oldImg);
-                    }, 1500);
-                }
+                    // Add new image
+                    nextImg.style.opacity = '0';
+                    background.appendChild(nextImg);
+                    
+                    // Trigger reflow
+                    nextImg.offsetHeight;
+                    
+                    // Add active class to new image
+                    nextImg.classList.add('active');
+                    console.log('New image added and activated');
+                    
+                    // Remove old image after transition
+                    if (background.children.length > 1) {
+                        const oldImg = background.children[0];
+                        oldImg.classList.add('fade-out');
+                        
+                        setTimeout(() => {
+                            background.removeChild(oldImg);
+                            console.log('Old image removed');
+                        }, 1500);
+                    }
 
-                // Reshuffle when we've shown all images
-                if (currentIndex === shuffledImages.length - 1) {
-                    shuffledImages = shuffleArray([...images]);
+                    currentIndex = (currentIndex + 1) % shuffledImages.length;
+
+                    // Reshuffle when we've shown all images
+                    if (currentIndex === 0) {
+                        shuffledImages = shuffleArray([...images]);
+                        console.log('Images reshuffled:', shuffledImages);
+                    }
+                } catch (error) {
+                    console.error('Error in showNextImage:', error);
                 }
             }
+
+            // Show first image immediately
+            await showNextImage();
 
             // Change image every 5 seconds
             setInterval(showNextImage, 5000);
         }
 
         // Initialize slideshow
-        initSlideshow();
+        initSlideshow().catch(error => console.error('Error initializing slideshow:', error));
 
         // Add click handler for begin button
         document.getElementById('beginButton').addEventListener('click', () => {
