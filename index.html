@@ -224,7 +224,7 @@
             }
         ];
 
-        let globalMap, globalMapMarkers = [], animationPath;
+        let globalMap, globalMapMarkers = [];
         let currentEventIndex = -1;
         let planeMarker, planePath;
 
@@ -269,24 +269,13 @@
                 const marker = new google.maps.Marker({
                     position: journey.coordinates,
                     map: globalMap,
-                    title: journey.location,
-                    label: (index + 1).toString()
+                    title: journey.location
                 });
                 globalMapMarkers.push(marker);
-                bounds.extend(marker.getPosition());
+                bounds.extend(marker.position);
             });
 
             globalMap.fitBounds(bounds);
-
-            const pathCoordinates = journeyData.map(journey => journey.coordinates);
-            animationPath = new google.maps.Polyline({
-                path: pathCoordinates,
-                geodesic: true,
-                strokeColor: '#FF0000',
-                strokeOpacity: 1.0,
-                strokeWeight: 2
-            });
-            animationPath.setMap(globalMap);
         }
 
         function initPlaneAnimation() {
@@ -306,6 +295,7 @@
                 strokeOpacity: 1.0,
                 strokeWeight: 2
             });
+            planePath.setMap(globalMap);
         }
 
         function animatePlaneRoute() {
@@ -338,13 +328,6 @@
             return [interpolatedPoint];
         }
 
-        function startJourney() {
-            document.getElementById('startButton').style.display = 'none';
-            animateRoute();
-            initPlaneAnimation();
-            animatePlaneRoute();
-        }
-
         function animateRoute() {
             let currentIndex = -1;
             const eventInterval = setInterval(() => {
@@ -360,6 +343,13 @@
 
                 initMap(`map-${currentIndex}`, journey.coordinates);
             }, 2000);
+        }
+
+        function startJourney() {
+            document.getElementById('startButton').style.display = 'none';
+            animateRoute();
+            initPlaneAnimation();
+            animatePlaneRoute();
         }
 
         document.getElementById('startButton').addEventListener('click', startJourney);
