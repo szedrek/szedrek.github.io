@@ -126,7 +126,7 @@
 <body>
     <div class="container">
         <div class="background" id="background">
-            <!-- Images will be loaded dynamically from the 'images' folder -->
+            <!-- Images will be loaded dynamically -->
         </div>
         <div class="overlay"></div>
         <h1 class="title">Family 2024</h1>
@@ -134,24 +134,19 @@
     </div>
 
     <script>
+        // List of image files in the images folder
+        const imageFiles = [
+            'image1.jpg',
+            'image2.jpg',
+            'image3.jpg',
+            'image4.jpg',
+            'image5.jpg',
+            // Add more image filenames as needed
+        ];
+
         // Function to get all images from the images folder
-        async function loadImages() {
-            const images = [];
-            try {
-                const response = await fetch('images/');
-                const text = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                const links = doc.querySelectorAll('a');
-                links.forEach(link => {
-                    if (link.href.match(/\.(jpe?g|png|gif)$/i)) {
-                        images.push('images/' + link.href.split('/').pop());
-                    }
-                });
-            } catch (error) {
-                console.error('Error loading images:', error);
-            }
-            return images;
+        function loadImages() {
+            return imageFiles.map(file => `images/${file}`);
         }
 
         // Function to preload images
@@ -176,24 +171,24 @@
         // Initialize background slideshow
         async function initSlideshow() {
             const background = document.getElementById('background');
-            let images = await loadImages();
+            let images = loadImages();
             if (images.length === 0) {
                 console.error('No images found in the images folder');
                 return;
             }
-            let currentIndex = 0;
+            let shuffledImages = shuffleArray([...images]);
 
             // Preload first image
-            const firstImg = await preloadImage(images[0]);
+            const firstImg = await preloadImage(shuffledImages[0]);
             firstImg.classList.add('active');
             background.appendChild(firstImg);
 
+            let currentIndex = 0;
+
             // Function to show next image
             async function showNextImage() {
-                if (images.length === 0) return;
-                
-                const nextIndex = Math.floor(Math.random() * images.length);
-                const nextImg = await preloadImage(images[nextIndex]);
+                currentIndex = (currentIndex + 1) % shuffledImages.length;
+                const nextImg = await preloadImage(shuffledImages[currentIndex]);
                 
                 // Add new image
                 nextImg.style.opacity = '0';
@@ -215,13 +210,9 @@
                     }, 1500);
                 }
 
-                // Remove the used image from the array
-                images.splice(nextIndex, 1);
-
                 // Reshuffle when we've shown all images
-                if (images.length === 0) {
-                    images = await loadImages();
-                    shuffleArray(images);
+                if (currentIndex === shuffledImages.length - 1) {
+                    shuffledImages = shuffleArray([...images]);
                 }
             }
 
