@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Journey Timeline</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: #4CAF50;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-item.left {
+            left: 0;
+        }
+        .timeline-item.right {
+            left: 50%;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: #4CAF50;
+            border: 4px solid white;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-item.right::after {
+            left: -17px;
+        }
+        .timeline-content {
+            padding: 20px;
+            background-color: white;
+            position: relative;
+            border-radius: 6px;
+        }
+        .map {
+            margin: 20px 0;
+            height: 300px;
+            background: #ddd;
+            text-align: center;
+            line-height: 300px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Our Family Journey</h1>
+</header>
+
+<section class="timeline">
+    <!-- First item -->
+    <div class="timeline-item left">
+        <div class="timeline-content">
+            <h2>January 2024 - Paris</h2>
+            <p>Visited the Eiffel Tower and enjoyed French cuisine.</p>
+            <div class="map">Map placeholder for Paris</div>
+            <img src="photos/paris.jpg" alt="Paris photo" style="width:100%; border-radius: 8px;">
+        </div>
+    </div>
+
+    <!-- Second item -->
+    <div class="timeline-item right">
+        <div class="timeline-content">
+            <h2>March 2024 - Rome</h2>
+            <p>Explored the Colosseum and Vatican City.</p>
+            <div class="map">Map placeholder for Rome</div>
+            <img src="photos/rome.jpg" alt="Rome photo" style="width:100%; border-radius: 8px;">
+        </div>
+    </div>
+
+    <!-- Third item -->
+    <div class="timeline-item left">
+        <div class="timeline-content">
+            <h2>July 2024 - Tokyo</h2>
+            <p>Experienced traditional Japanese culture and visited Mount Fuji.</p>
+            <div class="map">Map placeholder for Tokyo</div>
+            <img src="photos/tokyo.jpg" alt="Tokyo photo" style="width:100%; border-radius: 8px;">
+        </div>
+    </div>
+</section>
+
+<script>
+    // You can replace "Map placeholder" with embedded maps or interactive content using Google Maps API or similar.
+</script>
+
+</body>
+</html>
