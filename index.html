@@ -224,9 +224,8 @@
             }
         ];
 
-        let globalMap, globalMapMarkers = [];
+        let globalMap, globalMapMarkers = [], animationPath, planeMarker;
         let currentEventIndex = -1;
-        let planeMarker, planePath;
 
         function createTimelineItem(journey, index) {
             const item = document.createElement('div');
@@ -236,12 +235,13 @@
             const content = document.createElement('div');
             content.className = 'content';
     
-            content.innerHTML = 
-                `<h2>${journey.date}</h2>
+            content.innerHTML = `
+                <h2>${journey.date}</h2>
                 <h3>${journey.location}</h3>
                 <p>${journey.description}</p>
                 <div id="map-${index}" class="map"></div>
-                <img src="${journey.photo}" alt="${journey.location}" class="photo">`;
+                <img src="${journey.photo}" alt="${journey.location}" class="photo">
+            `;
     
             item.appendChild(content);
             return item;
@@ -271,90 +271,77 @@
                     map: globalMap,
                     title: journey.location
                 });
-                globalMapMarkers.push(marker);
                 bounds.extend(marker.position);
-            });
+                globalMapMarkers.push(marker);
 
+                marker.addListener('click', () => showEventDetails(index));
+            });
             globalMap.fitBounds(bounds);
         }
 
-        function initPlaneAnimation() {
-            planeMarker = new google.maps.Marker({
-                position: journeyData[0].coordinates,
-                map: globalMap,
-                icon: {
-                    url: "https://example.com/plane-icon.png", // Replace with your plane image URL
-                    scaledSize: new google.maps.Size(30, 30) // Adjust size as needed
-                }
-            });
+        function showEventDetails(index) {
+            const timelineItem = document.getElementById(`event-${index}`);
+            const offsetTop = timelineItem.offsetTop;
+            window.scrollTo({ top: offsetTop - 50, behavior: 'smooth' });
 
-            planePath = new google.maps.Polyline({
-                path: [],
+            if (index === currentEventIndex) return;
+            currentEventIndex = index;
+
+            if (planeMarker) planeMarker.setMap(null); // Remove previous plane marker if exists
+            const journey = journeyData[index];
+            animatePlane(journey.coordinates);
+        }
+
+        function animatePlane(destination) {
+            const flightPath = new google.maps.Polyline({
+                path: animationPath,
                 geodesic: true,
-                strokeColor: '#00FF00',
+                strokeColor: '#FF0000',
                 strokeOpacity: 1.0,
                 strokeWeight: 2
             });
-            planePath.setMap(globalMap);
-        }
+            flightPath.setMap(globalMap);
 
-        function animatePlaneRoute() {
-            let step = 0;
-            const numSteps = 100;
-            const totalPoints = journeyData.length;
+            const planeIcon = {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 6,
+                strokeColor: '#000000'
+            };
+            planeMarker = new google.maps.Marker({
+                position: animationPath[0],
+                map: globalMap,
+                icon: planeIcon,
+                animation: google.maps.Animation.DROP
+            });
 
-            const planeAnimationInterval = setInterval(() => {
-                if (step >= numSteps) {
-                    clearInterval(planeAnimationInterval);
-                    return;
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < animationPath.length - 1) {
+                    planeMarker.setPosition(animationPath[index]);
+                    index++;
+                } else {
+                    clearInterval(interval);
                 }
-
-                let pathCoordinates = [];
-                for (let i = 0; i < totalPoints - 1; i++) {
-                    pathCoordinates = pathCoordinates.concat(getInterpolatedPath(i, step, numSteps));
-                }
-
-                planePath.setPath(pathCoordinates);
-                planeMarker.setPosition(pathCoordinates[step]);
-
-                step++;
-            }, 50);
-        }
-
-        function getInterpolatedPath(i, step, numSteps) {
-            const start = new google.maps.LatLng(journeyData[i].coordinates.lat, journeyData[i].coordinates.lng);
-            const end = new google.maps.LatLng(journeyData[i + 1].coordinates.lat, journeyData[i + 1].coordinates.lng);
-            const interpolatedPoint = google.maps.geometry.spherical.interpolate(start, end, step / numSteps);
-            return [interpolatedPoint];
-        }
-
-        function animateRoute() {
-            let currentIndex = -1;
-            const eventInterval = setInterval(() => {
-                currentIndex++;
-                if (currentIndex >= journeyData.length) {
-                    clearInterval(eventInterval);
-                    return;
-                }
-
-                const journey = journeyData[currentIndex];
-                const timelineItem = createTimelineItem(journey, currentIndex);
-                document.getElementById('timeline').appendChild(timelineItem);
-
-                initMap(`map-${currentIndex}`, journey.coordinates);
-            }, 2000);
+            }, 500);
         }
 
         function startJourney() {
             document.getElementById('startButton').style.display = 'none';
-            animateRoute();
-            initPlaneAnimation();
-            animatePlaneRoute();
+            document.getElementById('timeline').innerHTML = '';
+
+            journeyData.forEach((journey, index) => {
+                const timelineItem = createTimelineItem(journey, index);
+                document.getElementById('timeline').appendChild(timelineItem);
+                initMap(`map-${index}`, journey.coordinates);
+            });
+
+            document.getElementById('summary').style.opacity = 1;
+            initGlobalMap();
+            showEventDetails(0); // Start the journey from the first event
         }
 
+        // Initialize the global map with markers
         document.getElementById('startButton').addEventListener('click', startJourney);
-
-        initGlobalMap(); // Initialize the global map with all journey markers
     </script>
 </body>
 </html>
