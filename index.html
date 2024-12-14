@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Background Slideshow</title>
+    <title>Family 2024</title>
     <style>
         body, html {
             margin: 0;
@@ -33,6 +33,51 @@
             color: white;
             font-size: 3em;
             text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+            animation: titleFloat 3s ease-in-out infinite;
+        }
+
+        .begin-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            font-size: 1.8em;
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            overflow: hidden;
+        }
+
+        .begin-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .begin-button:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .begin-button:hover::before {
+            left: 100%;
+        }
+
+        @keyframes titleFloat {
+            0% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-20px); }
+            100% { transform: translateX(-50%) translateY(0px); }
         }
     </style>
 </head>
@@ -40,6 +85,7 @@
 
     <div class="background" id="background"></div>
     <h1>Family 2024</h1>
+    <button class="begin-button" id="beginButton">Begin Journey</button>
 
     <script>
         // List of image filenames
@@ -69,6 +115,11 @@
         // Initialize the slideshow
         setInterval(loadRandomImage, 7000); // Change image every 7 seconds
         loadRandomImage(); // Load the first image immediately
+
+        // Add click handler for begin button
+        document.getElementById('beginButton').addEventListener('click', () => {
+            window.location.href = 'https://szedrek.github.io/2024';
+        });
     </script>
 
 </body>
