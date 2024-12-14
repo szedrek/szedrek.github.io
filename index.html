@@ -178,22 +178,22 @@
                 
                 const nextIndex = Math.floor(Math.random() * images.length);
                 const nextImg = await preloadImage(images[nextIndex]);
-                
-                // Add new image
+
+                // Add new image to background
                 nextImg.style.opacity = '0';
                 background.appendChild(nextImg);
-                
-                // Trigger reflow
+
+                // Trigger reflow for smooth transition
                 nextImg.offsetHeight;
-                
+
                 // Add active class to new image
                 nextImg.classList.add('active');
-                
+
                 // Remove old image after transition
                 if (background.children.length > 1) {
                     const oldImg = background.children[0];
                     oldImg.classList.add('fade-out');
-                    
+
                     setTimeout(() => {
                         background.removeChild(oldImg);
                     }, 1500);
@@ -204,12 +204,7 @@
 
                 // Reshuffle when we've shown all images
                 if (images.length === 0) {
-                    images = [
-                        'images/torta.jpg',
-                        'images/én.png',
-                        'images/20200422_114701 (1).jpg',
-                        'images/photo4.jpg'
-                    ];
+                    images.push('images/torta.jpg', 'images/én.png', 'images/20200422_114701 (1).jpg', 'images/photo4.jpg');
                     shuffleArray(images);
                 }
             }
