@@ -30,8 +30,6 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
         }
 
         .background img {
@@ -163,12 +161,12 @@
 
             let currentIndex = 0;
 
-            // Preload first image
+            // Preload the first image
             const firstImg = await preloadImage(images[0]);
             firstImg.classList.add('active');
             background.appendChild(firstImg);
 
-            // Function to show next image
+            // Function to show the next image
             async function showNextImage() {
                 if (images.length === 0) return;
 
@@ -182,10 +180,10 @@
                 // Trigger reflow for smooth transition
                 nextImg.offsetHeight;
 
-                // Add active class to new image
+                // Add active class to the new image
                 nextImg.classList.add('active');
 
-                // Remove old image after transition
+                // Remove the old image after transition
                 if (background.children.length > 1) {
                     const oldImg = background.children[0];
                     oldImg.classList.add('fade-out');
