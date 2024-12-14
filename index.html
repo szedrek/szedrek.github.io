@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,7 +126,7 @@
 <body>
     <div class="container">
         <div class="background" id="background">
-            <!-- Images will be loaded dynamically -->
+            <!-- Images will be loaded dynamically from the 'images' folder -->
         </div>
         <div class="overlay"></div>
         <h1 class="title">Family 2024</h1>
@@ -135,32 +134,32 @@
     </div>
 
     <script>
-        // List of image files in the images folder
-        const imageFiles = [
-            '/placeholder.svg?height=1080&width=1920',
-            '/placeholder.svg?height=1080&width=1920',
-            '/placeholder.svg?height=1080&width=1920',
-            '/placeholder.svg?height=1080&width=1920',
-            '/placeholder.svg?height=1080&width=1920'
-        ];
-
-        // Function to get all images
-        function loadImages() {
-            return imageFiles;
+        // Function to get all images from the images folder
+        async function loadImages() {
+            const images = [];
+            try {
+                const response = await fetch('images/');
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = doc.querySelectorAll('a');
+                links.forEach(link => {
+                    if (link.href.match(/\.(jpe?g|png|gif)$/i)) {
+                        images.push('images/' + link.href.split('/').pop());
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading images:', error);
+            }
+            return images;
         }
 
         // Function to preload images
         function preloadImage(src) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => {
-                    console.log(`Image loaded successfully: ${src}`);
-                    resolve(img);
-                };
-                img.onerror = (error) => {
-                    console.error(`Error loading image ${src}:`, error);
-                    reject(error);
-                };
+                img.onload = () => resolve(img);
+                img.onerror = reject;
                 img.src = src;
             });
         }
@@ -177,68 +176,61 @@
         // Initialize background slideshow
         async function initSlideshow() {
             const background = document.getElementById('background');
-            let images = loadImages();
-            console.log('Loaded images:', images);
-
+            let images = await loadImages();
             if (images.length === 0) {
-                console.error('No images found');
+                console.error('No images found in the images folder');
                 return;
             }
-
-            let shuffledImages = shuffleArray([...images]);
-            console.log('Shuffled images:', shuffledImages);
-
             let currentIndex = 0;
+
+            // Preload first image
+            const firstImg = await preloadImage(images[0]);
+            firstImg.classList.add('active');
+            background.appendChild(firstImg);
 
             // Function to show next image
             async function showNextImage() {
-                try {
-                    console.log(`Loading image: ${shuffledImages[currentIndex]}`);
-                    const nextImg = await preloadImage(shuffledImages[currentIndex]);
+                if (images.length === 0) return;
+                
+                const nextIndex = Math.floor(Math.random() * images.length);
+                const nextImg = await preloadImage(images[nextIndex]);
+                
+                // Add new image
+                nextImg.style.opacity = '0';
+                background.appendChild(nextImg);
+                
+                // Trigger reflow
+                nextImg.offsetHeight;
+                
+                // Add active class to new image
+                nextImg.classList.add('active');
+                
+                // Remove old image after transition
+                if (background.children.length > 1) {
+                    const oldImg = background.children[0];
+                    oldImg.classList.add('fade-out');
                     
-                    // Add new image
-                    nextImg.style.opacity = '0';
-                    background.appendChild(nextImg);
-                    
-                    // Trigger reflow
-                    nextImg.offsetHeight;
-                    
-                    // Add active class to new image
-                    nextImg.classList.add('active');
-                    console.log('New image added and activated');
-                    
-                    // Remove old image after transition
-                    if (background.children.length > 1) {
-                        const oldImg = background.children[0];
-                        oldImg.classList.add('fade-out');
-                        
-                        setTimeout(() => {
-                            background.removeChild(oldImg);
-                            console.log('Old image removed');
-                        }, 1500);
-                    }
+                    setTimeout(() => {
+                        background.removeChild(oldImg);
+                    }, 1500);
+                }
 
-                    currentIndex = (currentIndex + 1) % shuffledImages.length;
+                // Remove the used image from the array
+                images.splice(nextIndex, 1);
 
-                    // Reshuffle when we've shown all images
-                    if (currentIndex === 0) {
-                        shuffledImages = shuffleArray([...images]);
-                        console.log('Images reshuffled:', shuffledImages);
-                    }
-                } catch (error) {
-                    console.error('Error in showNextImage:', error);
+                // Reshuffle when we've shown all images
+                if (images.length === 0) {
+                    images = await loadImages();
+                    shuffleArray(images);
                 }
             }
-
-            // Show first image immediately
-            await showNextImage();
 
             // Change image every 5 seconds
             setInterval(showNextImage, 5000);
         }
 
         // Initialize slideshow
-        initSlideshow().catch(error => console.error('Error initializing slideshow:', error));
+        initSlideshow();
 
         // Add click handler for begin button
         document.getElementById('beginButton').addEventListener('click', () => {
@@ -247,3 +239,4 @@
     </script>
 </body>
 </html>
+
