@@ -141,7 +141,7 @@
             // Add the new background to the DOM
             document.body.insertBefore(newBackground, document.body.firstChild);
 
-            // Trigger reflow
+            // Trigger reflow (forcing a new layout pass)
             newBackground.offsetHeight;
 
             // Add the 'active' class to fade in and zoom
@@ -152,12 +152,12 @@
                 if (background.parentNode) {
                     background.parentNode.removeChild(background);
                 }
-            }, 2000);
+            }, 2000);  // Delay for 2 seconds to ensure the old image has finished transitioning
         }
 
-        // Initialize the slideshow
-        setInterval(loadRandomImage, 7000); // Change image every 7 seconds
-        loadRandomImage(); // Load the first image immediately
+        // Initialize the slideshow with random images and smooth transitions
+        setInterval(loadRandomImage, 7000);  // Change image every 7 seconds
+        loadRandomImage();  // Load the first image immediately
 
         // Add click handler for begin button
         document.getElementById('beginButton').addEventListener('click', () => {
