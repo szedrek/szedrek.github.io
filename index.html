@@ -163,6 +163,17 @@
             max-width: 400px;
             margin: 20px auto;
         }
+        .plane {
+            position: absolute;
+            width: 50px;
+            transition: transform 2s linear;
+        }
+        .plane-trail {
+            position: absolute;
+            width: 2px;
+            background-color: red;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -230,221 +241,73 @@
         function createTimelineItem(journey, index) {
             const item = document.createElement('div');
             item.className = `timeline-item ${index % 2 === 0 ? 'left' : 'right'}`;
-            item.id = `event-${index}`;
-    
-            const content = document.createElement('div');
-            content.className = 'content';
-    
-            content.innerHTML = `
-                <h2></h2>
-                <h3></h3>
-                <p></p>
-                <div id="map-${index}" class="map"></div>
-                <img src="${journey.photo}" alt="${journey.location}" class="photo">
+            item.innerHTML = `
+                <div class="content">
+                    <h3>${journey.date}</h3>
+                    <h4>${journey.location}</h4>
+                    <p>${journey.description}</p>
+                    <img class="photo" src="${journey.photo}" alt="${journey.location}">
+                </div>
             `;
-    
-            item.appendChild(content);
-            return item;
+            document.getElementById('timeline').appendChild(item);
         }
 
-        function initMap(mapId, coordinates) {
-            const map = new google.maps.Map(document.getElementById(mapId), {
-                zoom: 10,
-                center: coordinates
-            });
-            new google.maps.Marker({
-                position: coordinates,
-                map: map
-            });
-        }
-
-        function initGlobalMap() {
+        function initializeMap() {
             globalMap = new google.maps.Map(document.getElementById('globalMap'), {
                 zoom: 2,
                 center: {lat: 20, lng: 0}
             });
+        }
 
-            const bounds = new google.maps.LatLngBounds();
-            journeyData.forEach((journey, index) => {
-                const marker = new google.maps.Marker({
-                    position: journey.coordinates,
-                    map: globalMap,
-                    title: journey.location,
-                    label: (index + 1).toString()
-                });
-                globalMapMarkers.push(marker);
-                bounds.extend(marker.getPosition());
+        function addMarker(journey) {
+            const marker = new google.maps.Marker({
+                position: journey.coordinates,
+                map: globalMap,
+                title: journey.location
             });
-
-            globalMap.fitBounds(bounds);
-
-            const pathCoordinates = journeyData.map(journey => journey.coordinates);
-            animationPath = new google.maps.Polyline({
-                path: pathCoordinates,
-                geodesic: true,
-                strokeColor: '#FF0000',
-                strokeOpacity: 1.0,
-                strokeWeight: 2
-            });
+            globalMapMarkers.push(marker);
         }
 
-        function animateRoute() {
-            animationPath.setMap(globalMap);
-            let step = 0;
-            const numSteps = 100;
-            const animationInterval = setInterval(() => {
-                step++;
-                if (step > numSteps) {
-                    clearInterval(animationInterval);
-                    return;
-                }
-                const are = [
-                    new google.maps.LatLng(
-                        journeyData[0].coordinates.lat,
-                        journeyData[0].coordinates.lng
-                    )
-                ];
-                for (let i = 0; i < journeyData.length - 1; i++) {
-                    const path = google.maps.geometry.spherical.interpolate(
-                        new google.maps.LatLng(journeyData[i].coordinates.lat, journeyData[i].coordinates.lng),
-                        new google.maps.LatLng(journeyData[i+1].coordinates.lat, journeyData[i+1].coordinates.lng),
-                        step / numSteps
-                    );
-                    are.push(path);
-                }
-                animationPath.setPath(are);
-            }, 50);
-        }
+        function updateSummary() {
+            const daysAbroad = 340; // Example value
+            const distanceTraveled = 45678; // Example value
+            const countriesVisited = journeyData.length;
 
-        function animateNextEvent() {
-            currentEventIndex++;
-            if (currentEventIndex < journeyData.length) {
-                const item = document.getElementById(`event-${currentEventIndex}`);
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0)';
-        
-                // Animate text content
-                const dateElement = item.querySelector('h2');
-                const locationElement = item.querySelector('h3');
-                const descriptionElement = item.querySelector('p');
-        
-                animateText(dateElement, journeyData[currentEventIndex].date, 1000);
-                setTimeout(() => animateText(locationElement, journeyData[currentEventIndex].location, 1000), 1000);
-                setTimeout(() => animateText(descriptionElement, journeyData[currentEventIndex].description, 2000), 2000);
-        
-                initMap(`map-${currentEventIndex}`, journeyData[currentEventIndex].coordinates);
-                globalMapMarkers[currentEventIndex].setAnimation(google.maps.Animation.BOUNCE);
-                setTimeout(() => {
-                    globalMapMarkers[currentEventIndex].setAnimation(null);
-                }, 2000);
-                smoothScrollTo(item);
-                setTimeout(animateNextEvent, 7000); // Increased wait time to allow for text animations
-            } else {
-                document.getElementById('summary').style.opacity = '1';
-                initSummary();
-                smoothScrollTo(document.getElementById('summary'));
-            }
-        }
-
-        function smoothScrollTo(element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function initTimeline() {
-            const timeline = document.getElementById('timeline');
-            journeyData.forEach((journey, index) => {
-                const item = createTimelineItem(journey, index);
-                timeline.appendChild(item);
-            });
-        }
-
-        function initLightbox() {
-            const lightbox = document.getElementById('lightbox');
-            const lightboxImg = document.getElementById('lightbox-img');
-            
-            document.querySelectorAll('.photo').forEach(img => {
-                img.addEventListener('click', function() {
-                    lightboxImg.src = this.src;
-                    lightbox.style.display = 'block';
-                });
-            });
-            
-            lightbox.addEventListener('click', function() {
-                this.style.display = 'none';
-            });
-        }
-
-        function animateValue(obj, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function initSummary() {
-            const daysAbroad = 150;
-            const distanceTraveled = 25000;
-            const countriesVisited = 5;
-
-            animateValue(document.getElementById("daysAbroad"), 0, daysAbroad, 2000);
-            animateValue(document.getElementById("distanceTraveled"), 0, distanceTraveled, 2000);
-            animateValue(document.getElementById("countriesVisited"), 0, countriesVisited, 2000);
+            document.getElementById('daysAbroad').textContent = daysAbroad;
+            document.getElementById('distanceTraveled').textContent = distanceTraveled;
+            document.getElementById('countriesVisited').textContent = countriesVisited;
 
             const ctx = document.getElementById('travelChart').getContext('2d');
             new Chart(ctx, {
-                type: 'doughnut',
+                type: 'pie',
                 data: {
-                    labels: ['Days Abroad', 'Days at Home'],
+                    labels: journeyData.map(j => j.location),
                     datasets: [{
-                        data: [daysAbroad, 365 - daysAbroad],
-                        backgroundColor: ['#FF6384', '#36A2EB']
+                        label: 'Distance',
+                        data: [3000, 4000, 5000, 6000, 7000], // Example distances
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Time Spent Abroad vs Home'
-                        }
-                    }
                 }
             });
         }
 
         function startJourney() {
             document.getElementById('startButton').style.display = 'none';
-            animateRoute();
-            animateNextEvent();
+            journeyData.forEach((journey, index) => {
+                setTimeout(() => {
+                    createTimelineItem(journey, index);
+                    addMarker(journey);
+                }, index * 2000); // Example animation delay
+            });
+            setTimeout(() => {
+                document.getElementById('summary').style.opacity = 1;
+                updateSummary();
+            }, journeyData.length * 2000);
         }
 
-        function animateText(element, text, duration) {
-            let index = 0;
-            let interval = setInterval(() => {
-                element.textContent = text.slice(0, index);
-                if (index >= text.length) {
-                    clearInterval(interval);
-                }
-                index++;
-            }, duration / text.length);
-        }
+        document.getElementById('startButton').addEventListener('click', startJourney);
 
-        window.addEventListener('load', () => {
-            initTimeline();
-            initLightbox();
-            initGlobalMap();
-            document.getElementById('startButton').addEventListener('click', startJourney);
-        });
+        window.onload = initializeMap;
     </script>
 </body>
 </html>
-
