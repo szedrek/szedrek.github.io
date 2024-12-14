@@ -134,7 +134,7 @@
     </div>
 
     <script>
-        // Hardcoded image list from 'images' folder
+        // Hardcoded image list from the same folder as 'index.html'
         const images = [
             'en.png',
             'maty.jpg',
@@ -164,8 +164,6 @@
         async function initSlideshow() {
             const background = document.getElementById('background');
             shuffleArray(images);
-
-            let currentIndex = 0;
 
             // Preload first image
             const firstImg = await preloadImage(images[0]);
