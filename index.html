@@ -24,12 +24,12 @@
         }
 
         .background {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
+            z-index: -1; /* Ensure background stays behind content */
         }
 
         .background img {
@@ -59,6 +59,7 @@
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
             animation: titleFloat 3s ease-in-out infinite;
             letter-spacing: 4px;
+            z-index: 1; /* Ensure title stays above background */
         }
 
         .begin-button {
@@ -76,7 +77,7 @@
             cursor: pointer;
             transition: all 0.5s ease;
             overflow: hidden;
-            z-index: 2;
+            z-index: 1; /* Ensure button stays above background */
         }
 
         .begin-button::before {
@@ -115,6 +116,7 @@
             height: 100%;
             background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
             pointer-events: none;
+            z-index: 0; /* Ensure overlay stays above images but behind text */
         }
     </style>
 </head>
