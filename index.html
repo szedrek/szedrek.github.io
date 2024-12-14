@@ -3,24 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family 2024</title>
+    <title>Random Background Slideshow</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
-
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
+            font-family: Arial, sans-serif;
             overflow: hidden;
-            font-family: 'Playfair Display', serif;
-            background-color: #000;
-        }
-
-        .container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.3);
         }
 
         .background {
@@ -29,195 +19,57 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-        }
-
-        .background img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            background-size: cover;
+            background-position: center;
             opacity: 0;
-            transform: scale(1.1);
-            transition: opacity 1.5s ease-in-out, transform 3s ease-in-out;
+            transition: opacity 2s ease-in-out;
         }
 
-        .background img.active {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .background img.fade-out {
-            opacity: 0;
-            transform: scale(1);
-        }
-
-        .title {
+        h1 {
             position: absolute;
             top: 20%;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 5em;
             color: white;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
-            animation: titleFloat 3s ease-in-out infinite;
-            letter-spacing: 4px;
-        }
-
-        .begin-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            font-size: 1.8em;
-            font-family: 'Playfair Display', serif;
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.5s ease;
-            overflow: hidden;
-            z-index: 2;
-        }
-
-        .begin-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.2);
-            transition: all 0.5s ease;
-            z-index: -1;
-        }
-
-        .begin-button:hover {
-            transform: translate(-50%, -50%) scale(1.1);
-            background-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-
-        .begin-button:hover::before {
-            left: 100%;
-        }
-
-        @keyframes titleFloat {
-            0% { transform: translateX(-50%) translateY(0px); }
-            50% { transform: translateX(-50%) translateY(-20px); }
-            100% { transform: translateX(-50%) translateY(0px); }
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
-            pointer-events: none;
+            font-size: 3em;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="background" id="background">
-            <!-- Images will be loaded dynamically -->
-        </div>
-        <div class="overlay"></div>
-        <h1 class="title">Family 2024</h1>
-        <button class="begin-button" id="beginButton">Begin Journey</button>
-    </div>
+
+    <div class="background" id="background"></div>
+    <h1>Family 2024</h1>
 
     <script>
-        // Hardcoded image list from the same folder as 'index.html'
+        // List of image filenames
         const images = [
             'en.png',
             'maty.jpg',
-            'torta.jpg',
+            'torta.jpg'
         ];
 
-        // Function to preload images
-        function preloadImage(src) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-                img.src = src;
-            });
-        }
-
-        // Function to shuffle array
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        // Initialize background slideshow
-        async function initSlideshow() {
+        // Function to load a random image from the list
+        function loadRandomImage() {
             const background = document.getElementById('background');
-            shuffleArray(images);
+            const randomImage = images[Math.floor(Math.random() * images.length)];
 
-            // Preload first image
-            const firstImg = await preloadImage(images[0]);
-            firstImg.classList.add('active');
-            background.appendChild(firstImg);
+            // Set the background image
+            background.style.backgroundImage = `url(${randomImage})`;
 
-            // Function to show next image
-            async function showNextImage() {
-                if (images.length === 0) return;
-                
-                const nextIndex = Math.floor(Math.random() * images.length);
-                const nextImg = await preloadImage(images[nextIndex]);
+            // Fade in the background
+            background.style.opacity = '1';
 
-                // Add new image to background
-                nextImg.style.opacity = '0';
-                background.appendChild(nextImg);
-
-                // Trigger reflow for smooth transition
-                nextImg.offsetHeight;
-
-                // Add active class to new image
-                nextImg.classList.add('active');
-
-                // Remove old image after transition
-                if (background.children.length > 1) {
-                    const oldImg = background.children[0];
-                    oldImg.classList.add('fade-out');
-
-                    setTimeout(() => {
-                        background.removeChild(oldImg);
-                    }, 1500);
-                }
-
-                // Remove the used image from the array
-                images.splice(nextIndex, 1);
-
-                // Reshuffle when we've shown all images
-                if (images.length === 0) {
-                    images.push('en.png', 'maty.jpg', 'torta.jpg');
-                    shuffleArray(images);
-                }
-            }
-
-            // Change image every 5 seconds
-            setInterval(showNextImage, 5000);
+            // After 5 seconds, start fading out the image
+            setTimeout(() => {
+                background.style.opacity = '0';
+            }, 5000); // Fade out after 5 seconds
         }
 
-        // Initialize slideshow
-        initSlideshow();
-
-        // Add click handler for begin button
-        document.getElementById('beginButton').addEventListener('click', () => {
-            window.location.href = 'https://szedrek.github.io/2024';
-        });
+        // Initialize the slideshow
+        setInterval(loadRandomImage, 7000); // Change image every 7 seconds
+        loadRandomImage(); // Load the first image immediately
     </script>
+
 </body>
 </html>
