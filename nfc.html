@@ -45,12 +45,14 @@
         document.getElementById('startButton').addEventListener('click', async () => {
             const messageElement = document.getElementById('message');
 
-            if ('NFCReader' in window) {
+            if ('nfc' in navigator) {
                 try {
-                    const nfc = new NFCReader();
+                    const ndef = new NDEFReader();
+                    await ndef.scan();
 
-                    nfc.onreading = event => {
-                        const nfcId = event.serialNumber; // Read NFC tag ID
+                    ndef.onreading = event => {
+                        const decoder = new TextDecoder();
+                        const nfcId = decoder.decode(event.message.records[0].data); // Read NFC tag data
 
                         if (nfcId === validNFCId) {
                             messageElement.textContent = "Welcome!";
@@ -61,12 +63,11 @@
                         }
                     };
 
-                    nfc.onreadingerror = () => {
+                    ndef.onreadingerror = () => {
                         messageElement.textContent = "Error reading NFC tag. Please try again.";
                         messageElement.style.color = "red";
                     };
 
-                    await nfc.scan(); // Start scanning
                     messageElement.textContent = "Hold your NFC tag near the device.";
                     messageElement.style.color = "#333";
                 } catch (err) {
