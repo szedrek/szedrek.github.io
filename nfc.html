@@ -15,113 +15,60 @@
             margin: 0;
             background-color: #f5f5f5;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
-            margin: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
         #scanResult, #lastError {
             margin-top: 20px;
             font-size: 1.2rem;
-        }
-        .serialNumber, .recordType, .ndefdata {
-            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <h1>NFC Reader</h1>
-    <div>
-        <button id="scanButton" onclick="scanTag()">Scan for Tags</button>
-    </div>
-    <div>
-        <button id="stopScanButton" onclick="abortScan()" disabled>Abort Scan</button>
-    </div>
-    <div style="position:relative;">
-        <input type="checkbox" id="showSerialNumber" /> 
-        <label for="showSerialNumber">Show Serial Number</label>
-    </div>        
     <div id="scanResult"></div>
     <div id="lastError"></div>
 
     <script>
         let reader;
-        let abortController;
 
-        function scanTag() {
+        async function startScanning() {
             const lastError = document.getElementById('lastError');
             const scanResult = document.getElementById('scanResult');
+            const correctTagId = "c3:17:34:40";
 
             if (!('NDEFReader' in window)) {
                 lastError.innerText = "Sorry, this app only works on devices capable of reading NFC";
-                document.getElementById('scanButton').disabled = true;
-                document.getElementById('stopScanButton').disabled = true;
                 return;
             }
 
             reader = new NDEFReader();
-            abortController = new AbortController();
 
-            reader.onreadingerror = (e) => {
-                lastError.innerText = `Error: ${e.toString()}`;
-            };
+            try {
+                await reader.scan();
+                lastError.innerText = "";
 
-            reader.onreading = (e) => {
-                scanResult.innerText = "";
-                const showSerialNumberChecked = document.getElementById('showSerialNumber').checked;
+                reader.onreadingerror = () => {
+                    lastError.innerText = "Error reading NFC tag. Please try again.";
+                };
 
-                if (showSerialNumberChecked) {
-                    const serialNumberElement = document.createElement('div');
-                    serialNumberElement.className = 'serialNumber';
-                    serialNumberElement.innerText = e.serialNumber || "No Serial Number";
-                    scanResult.appendChild(serialNumberElement);
-                }
+                reader.onreading = (event) => {
+                    scanResult.innerText = "";
 
-                for (let record of e.message.records) {
-                    const envelopeElement = document.createElement('div');
-                    envelopeElement.className = 'ndfmessage';
-
-                    const typeText = document.createElement('div');
-                    typeText.className = 'recordType';
-                    typeText.innerText = `Record Type: ${record.recordType}`;
-
-                    const dataTextElement = document.createElement('div');
-                    const decoder = new TextDecoder(record.encoding || 'utf-8');
-                    dataTextElement.innerText = `Data: ${decoder.decode(record.data)}`;
-
-                    envelopeElement.appendChild(typeText);
-                    envelopeElement.appendChild(dataTextElement);
-                    scanResult.appendChild(envelopeElement);
-                }
-            };
-
-            reader.scan({ signal: abortController.signal })
-                .then(() => {
-                    document.getElementById('scanButton').disabled = true;
-                    document.getElementById('stopScanButton').disabled = false;
-                })
-                .catch((e) => {
-                    if (e) {
-                        lastError.innerText = `Error starting NFC scan: ${e.message}`;
+                    const serialNumber = event.serialNumber;
+                    if (serialNumber) {
+                        if (serialNumber.toLowerCase() === correctTagId.toLowerCase()) {
+                            window.location.href = "https://szedrek.github.io";
+                        } else {
+                            scanResult.innerText = "Incorrect tag. Try again.";
+                        }
+                    } else {
+                        scanResult.innerText = "No serial number detected. Try again.";
                     }
-                });
-        }
-
-        function abortScan() {
-            if (abortController) {
-                abortController.abort();
-                document.getElementById('scanButton').disabled = false;
-                document.getElementById('stopScanButton').disabled = true;
+                };
+            } catch (error) {
+                lastError.innerText = `Error starting NFC scan: ${error.message}`;
             }
         }
+
+        startScanning();
     </script>
 </body>
 </html>
