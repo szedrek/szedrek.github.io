@@ -15,11 +15,6 @@
             margin: 0;
             background-color: #f5f5f5;
         }
-        #message {
-            font-size: 1.5rem;
-            color: #333;
-            margin-top: 20px;
-        }
         button {
             padding: 10px 20px;
             font-size: 1rem;
@@ -28,58 +23,105 @@
             border-radius: 5px;
             background-color: #4CAF50;
             color: white;
+            margin: 10px;
         }
         button:hover {
             background-color: #45a049;
+        }
+        #scanResult, #lastError {
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+        .serialNumber, .recordType, .ndefdata {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <h1>NFC Reader</h1>
-    <button id="startButton">Start NFC Scan</button>
-    <div id="message">Scan an NFC tag.</div>
+    <div>
+        <button id="scanButton" onclick="scanTag()">Scan for Tags</button>
+    </div>
+    <div>
+        <button id="stopScanButton" onclick="abortScan()" disabled>Abort Scan</button>
+    </div>
+    <div style="position:relative;">
+        <input type="checkbox" id="showSerialNumber" /> 
+        <label for="showSerialNumber">Show Serial Number</label>
+    </div>        
+    <div id="scanResult"></div>
+    <div id="lastError"></div>
 
     <script>
-        const validNFCId = "12345678"; // Replace with the correct NFC ID
+        let reader;
+        let abortController;
 
-        document.getElementById('startButton').addEventListener('click', async () => {
-            const messageElement = document.getElementById('message');
+        function scanTag() {
+            const lastError = document.getElementById('lastError');
+            const scanResult = document.getElementById('scanResult');
 
-            if ('nfc' in navigator) {
-                try {
-                    const ndef = new NDEFReader();
-                    await ndef.scan();
-
-                    ndef.onreading = event => {
-                        const decoder = new TextDecoder();
-                        const nfcId = decoder.decode(event.message.records[0].data); // Read NFC tag data
-
-                        if (nfcId === validNFCId) {
-                            messageElement.textContent = "Welcome!";
-                            messageElement.style.color = "green";
-                        } else {
-                            messageElement.textContent = "Access Denied. Incorrect Tag.";
-                            messageElement.style.color = "red";
-                        }
-                    };
-
-                    ndef.onreadingerror = () => {
-                        messageElement.textContent = "Error reading NFC tag. Please try again.";
-                        messageElement.style.color = "red";
-                    };
-
-                    messageElement.textContent = "Hold your NFC tag near the device.";
-                    messageElement.style.color = "#333";
-                } catch (err) {
-                    console.error("NFC Scan Error:", err);
-                    messageElement.textContent = "Error starting NFC scan. Ensure your browser supports NFC.";
-                    messageElement.style.color = "red";
-                }
-            } else {
-                messageElement.textContent = "NFC is not supported on this device or browser.";
-                messageElement.style.color = "red";
+            if (!('NDEFReader' in window)) {
+                lastError.innerText = "Sorry, this app only works on devices capable of reading NFC";
+                document.getElementById('scanButton').disabled = true;
+                document.getElementById('stopScanButton').disabled = true;
+                return;
             }
-        });
+
+            reader = new NDEFReader();
+            abortController = new AbortController();
+
+            reader.onreadingerror = (e) => {
+                lastError.innerText = `Error: ${e.toString()}`;
+            };
+
+            reader.onreading = (e) => {
+                scanResult.innerText = "";
+                const showSerialNumberChecked = document.getElementById('showSerialNumber').checked;
+
+                if (showSerialNumberChecked) {
+                    const serialNumberElement = document.createElement('div');
+                    serialNumberElement.className = 'serialNumber';
+                    serialNumberElement.innerText = e.serialNumber || "No Serial Number";
+                    scanResult.appendChild(serialNumberElement);
+                }
+
+                for (let record of e.message.records) {
+                    const envelopeElement = document.createElement('div');
+                    envelopeElement.className = 'ndfmessage';
+
+                    const typeText = document.createElement('div');
+                    typeText.className = 'recordType';
+                    typeText.innerText = `Record Type: ${record.recordType}`;
+
+                    const dataTextElement = document.createElement('div');
+                    const decoder = new TextDecoder(record.encoding || 'utf-8');
+                    dataTextElement.innerText = `Data: ${decoder.decode(record.data)}`;
+
+                    envelopeElement.appendChild(typeText);
+                    envelopeElement.appendChild(dataTextElement);
+                    scanResult.appendChild(envelopeElement);
+                }
+            };
+
+            reader.scan({ signal: abortController.signal })
+                .then(() => {
+                    document.getElementById('scanButton').disabled = true;
+                    document.getElementById('stopScanButton').disabled = false;
+                })
+                .catch((e) => {
+                    if (e) {
+                        lastError.innerText = `Error starting NFC scan: ${e.message}`;
+                    }
+                });
+        }
+
+        function abortScan() {
+            if (abortController) {
+                abortController.abort();
+                document.getElementById('scanButton').disabled = false;
+                document.getElementById('stopScanButton').disabled = true;
+            }
+        }
     </script>
 </body>
 </html>
