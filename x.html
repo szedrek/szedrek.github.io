@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slow Time Travel with Stats</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        #dateDisplay {
+            font-size: 48px;
+            margin-bottom: 20px;
+            perspective: 300px;
+        }
+
+        .flip {
+            display: inline-block;
+            position: relative;
+            width: 40px;
+            height: 60px;
+            line-height: 60px;
+            background-color: #16213e;
+            border-radius: 6px;
+            margin: 0 2px;
+            font-size: 48px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .flip::before, .flip::after {
+            content: attr(data-number);
+            position: absolute;
+            left: 0;
+            right: 0;
+            background-color: #16213e;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .flip::before {
+            top: 0;
+            bottom: 50%;
+            border-bottom: 1px solid #0f3460;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .flip::after {
+            top: 50%;
+            bottom: 0;
+            line-height: 0;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .flip.flipping::before {
+            animation: flipTop 0.3s ease-in;
+        }
+
+        .flip.flipping::after {
+            animation: flipBottom 0.3s ease-out 0.3s;
+        }
+
+        @keyframes flipTop {
+            0% { transform: rotateX(0deg); }
+            100% { transform: rotateX(-90deg); }
+        }
+
+        @keyframes flipBottom {
+            0% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0deg); }
+        }
+
+        #locationDisplay {
+            font-size: 36px;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        #statsDisplay {
+            font-size: 18px;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        #imageContainer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        #imageContainer img {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            border-radius: 8px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            font-size: 18px;
+            font-family: 'Roboto Mono', monospace;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #e94560;
+            color: #ffffff;
+            border: none;
+            border-radius: 20px;
+            transition: background-color 0.3s ease-in-out, transform 0.1s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #ff6b6b;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            #dateDisplay {
+                font-size: 36px;
+            }
+
+            .flip {
+                width: 30px;
+                height: 45px;
+                line-height: 45px;
+                font-size: 36px;
+            }
+
+            #locationDisplay {
+                font-size: 28px;
+            }
+
+            #statsDisplay {
+                font-size: 16px;
+            }
+
+            #imageContainer img {
+                width: 150px;
+                height: 112px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="dateDisplay"></div>
+        <div id="locationDisplay"></div>
+        <div id="statsDisplay"></div>
+        <div id="imageContainer">
+            <img src="/placeholder.svg?height=150&width=200" alt="Location Image 1">
+            <img src="/placeholder.svg?height=150&width=200" alt="Location Image 2">
+            <img src="/placeholder.svg?height=150&width=200" alt="Location Image 3">
+        </div>
+        <button id="beginButton">Begin Time Travel</button>
+    </div>
+
+    <script>
+        const dateDisplay = document.getElementById('dateDisplay');
+        const locationDisplay = document.getElementById('locationDisplay');
+        const statsDisplay = document.getElementById('statsDisplay');
+        const imageContainer = document.getElementById('imageContainer');
+        const beginButton = document.getElementById('beginButton');
+        const images = imageContainer.getElementsByTagName('img');
+
+        const historicalEvents = [
+            { 
+                date: new Date(2024, 1, 10), 
+                location: 'Egypt', 
+                images: [
+                    '/placeholder.svg?height=150&width=200&text=Egypt+1',
+                    '/placeholder.svg?height=150&width=200&text=Egypt+2',
+                    '/placeholder.svg?height=150&width=200&text=Egypt+3'
+                ],
+                daysSpent: 14,
+                kmTraveled: 5834
+            },
+            { 
+                date: new Date(2024, 4, 15), 
+                location: 'Paris', 
+                images: [
+                    '/placeholder.svg?height=150&width=200&text=Paris+1',
+                    '/placeholder.svg?height=150&width=200&text=Paris+2',
+                    '/placeholder.svg?height=150&width=200&text=Paris+3'
+                ],
+                daysSpent: 7,
+                kmTraveled: 3364
+            },
+            { 
+                date: new Date(2024, 7, 1), 
+                location: 'New York', 
+                images: [
+                    '/placeholder.svg?height=150&width=200&text=New+York+1',
+                    '/placeholder.svg?height=150&width=200&text=New+York+2',
+                    '/placeholder.svg?height=150&width=200&text=New+York+3'
+                ],
+                daysSpent: 10,
+                kmTraveled: 5836
+            }
+        ];
+
+        function createFlipElement() {
+            const flip = document.createElement('div');
+            flip.className = 'flip';
+            return flip;
+        }
+
+        function updateDateDisplay(date) {
+            const dateString = formatDate(date);
+            const currentDigits = dateDisplay.textContent.replace(/\D/g, '').split('');
+            const newDigits = dateString.replace(/\D/g, '').split('');
+
+            dateDisplay.innerHTML = '';
+            dateString.split('').forEach((char, index) => {
+                if (char === '.') {
+                    dateDisplay.appendChild(document.createTextNode('.'));
+                } else {
+                    const flip = createFlipElement();
+                    flip.textContent = char;
+                    flip.setAttribute('data-number', char);
+                    if (currentDigits[index] !== newDigits[index]) {
+                        flip.classList.add('flipping');
+                    }
+                    dateDisplay.appendChild(flip);
+                }
+            });
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        }
+
+        function easeInOutQuad(t) {
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        }
+
+        function animateBackwards() {
+            let currentDate = new Date();
+            const startDate = new Date(currentDate);
+            const endDate = new Date(2024, 1, 10); // February 10, 2024
+            const duration = 10000; // 10 seconds for the backwards animation
+            const startTime = Date.now();
+
+            function update() {
+                const now = Date.now();
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeInOutQuad(progress);
+
+                const timeChange = (startDate.getTime() - endDate.getTime()) * easedProgress;
+                currentDate = new Date(startDate.getTime() - timeChange);
+
+                updateDateDisplay(currentDate);
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    updateLocationAndImages(endDate);
+                    setTimeout(animateForward, 3000); // Pause for 3 seconds before moving forward
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function animateForward() {
+            let currentDate = new Date(2024, 1, 10); // Start from February 10, 2024
+            const endDate = new Date(); // Current date
+            const duration = 120000; // 120 seconds (2 minutes) for the forward animation
+            const startTime = Date.now();
+            let lastEventIndex = 0;
+
+            function update() {
+                const now = Date.now();
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const timeChange = (endDate.getTime() - currentDate.getTime()) * progress;
+                currentDate = new Date(currentDate.getTime() + timeChange);
+
+                updateDateDisplay(currentDate);
+
+                // Check if we've reached a new event
+                for (let i = lastEventIndex; i < historicalEvents.length; i++) {
+                    if (currentDate >= historicalEvents[i].date) {
+                        updateLocationAndImages(currentDate);
+                        lastEventIndex = i;
+                    }
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    beginButton.disabled = false;
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function updateLocationAndImages(currentDate) {
+            let currentEvent = historicalEvents[0];
+            for (let i = 1; i < historicalEvents.length; i++) {
+                if (currentDate >= historicalEvents[i].date) {
+                    currentEvent = historicalEvents[i];
+                } else {
+                    break;
+                }
+            }
+
+            locationDisplay.textContent = currentEvent.location;
+            locationDisplay.style.opacity = '1';
+            locationDisplay.style.transform = 'translateY(0)';
+
+            statsDisplay.innerHTML = `Days spent: ${currentEvent.daysSpent}<br>Distance traveled: ${currentEvent.kmTraveled} km`;
+            statsDisplay.style.opacity = '1';
+            statsDisplay.style.transform = 'translateY(0)';
+
+            for (let i = 0; i < images.length; i++) {
+                images[i].src = currentEvent.images[i];
+                images[i].style.opacity = '1';
+                images[i].style.transform = 'scale(1)';
+            }
+        }
+
+        // Set initial date
+        updateDateDisplay(new Date());
+
+        beginButton.addEventListener('click', () => {
+            beginButton.disabled = true;
+            animateBackwards();
+        });
+    </script>
+</body>
+</html>
+
